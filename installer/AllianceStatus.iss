@@ -2,7 +2,9 @@
 ; Build with:  ISCC.exe installer\AllianceStatus.iss   (after .\publish.ps1 -Mode standalone)
 
 #define AppName "Alliance Status"
-#define AppVersion "1.0.0"
+#ifndef AppVersion
+  #define AppVersion "1.0.0"
+#endif
 #define AppExe "AllianceStatus.exe"
 
 [Setup]

@@ -3,23 +3,28 @@
   Builds a single-file AllianceStatus.exe into .\dist
 
 .EXAMPLE
-  .\publish.ps1                      # both variants for x64
-  .\publish.ps1 -Mode standalone     # no .NET install needed on the target PC
+  .\publish.ps1                          # both variants for x64, version from the .csproj
+  .\publish.ps1 -Mode standalone         # no .NET install needed on the target PC
+  .\publish.ps1 -Version 0.1.2           # override the version shown in the app
   .\publish.ps1 -Runtime win-arm64
 #>
 param(
     [ValidateSet('framework', 'standalone', 'both')] [string] $Mode = 'both',
-    [ValidateSet('win-x64', 'win-arm64')] [string] $Runtime = 'win-x64'
+    [ValidateSet('win-x64', 'win-arm64')] [string] $Runtime = 'win-x64',
+    [string] $Version = ''
 )
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 $project = Join-Path $root 'src\AllianceStatus\AllianceStatus.csproj'
 $dist = Join-Path $root 'dist'
 
+$versionArgs = @()
+if ($Version -and $Version -ne '0.0.0') { $versionArgs = @("-p:Version=$Version") }
+
 function Publish([string] $name, [string[]] $extra) {
     $out = Join-Path $dist "$Runtime-$name"
     if (Test-Path $out) { Remove-Item $out -Recurse -Force }
-    dotnet publish $project -c Release -r $Runtime -p:PublishSingleFile=true -o $out @extra
+    dotnet publish $project -c Release -r $Runtime -p:PublishSingleFile=true -o $out @versionArgs @extra
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed ($name)" }
     $zip = Join-Path $dist "AllianceStatus-$Runtime-$name.zip"
     Compress-Archive -Path (Join-Path $out '*') -DestinationPath $zip -Force

@@ -1,13 +1,11 @@
 # Builds AllianceStatus-Setup.exe on GitHub's free Windows runners.
-# - Push to main: builds and publishes as a Release draft (you review before publishing).
-# - Push a tag like v1.0.0: builds and publishes as a Release immediately.
-# - Manual: use Actions tab "Run workflow" button.
+# - Push a tag like v1.0.0: builds with version 1.0.0 and publishes a Release.
+# - Manual: Actions tab → "Run workflow" (builds artifacts only, no Release).
 name: Build installer
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
   push:
-    branches: [main]
     tags: ['v*']
 
 permissions:
@@ -17,11 +15,23 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
+
+      - name: Work out version
+        shell: pwsh
+        run: |
+          $ref = '${{ github.ref_name }}'
+          if ('${{ github.ref_type }}' -eq 'tag' -and $ref -match '^v?(\d+\.\d+\.\d+)') {
+            $version = $Matches[1]
+          } else {
+            $version = '0.0.0'
+          }
+          "APP_VERSION=$version" >> $env:GITHUB_ENV
+          Write-Host "Building version $version"
 
       - name: Test
         run: dotnet test -c Release
@@ -29,43 +39,27 @@ jobs:
 
       - name: Publish standalone exe
         shell: pwsh
-        run: ./publish.ps1 -Mode standalone -Runtime win-x64
+        run: ./publish.ps1 -Mode standalone -Runtime win-x64 -Version $env:APP_VERSION
 
       - name: Build installer
         shell: pwsh
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
-          & $iscc installer\AllianceStatus.iss
+          & $iscc "/DAppVersion=$env:APP_VERSION" installer\AllianceStatus.iss
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: AllianceStatus-Setup
           path: |
             dist/AllianceStatus-Setup.exe
             dist/AllianceStatus-win-x64-standalone.zip
 
-      - name: Detect version from tag or main
-        id: version
-        shell: bash
-        run: |
-          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            VERSION="${{ github.ref_name }}"
-            DRAFT=false
-          else
-            VERSION="main-${{ github.run_number }}"
-            DRAFT=true
-          fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "draft=$DRAFT" >> $GITHUB_OUTPUT
-
       - name: Create Release
+        if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ steps.version.outputs.version }}
-          tag_name: ${{ steps.version.outputs.version }}
-          draft: ${{ steps.version.outputs.draft }}
           files: |
             dist/AllianceStatus-Setup.exe
             dist/AllianceStatus-win-x64-standalone.zip
