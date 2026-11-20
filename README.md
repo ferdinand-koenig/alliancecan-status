@@ -19,21 +19,40 @@ Written by **Claude** (Anthropic's AI model, Claude Opus 5.5), initiated and co-
 
 ## Install
 
-**Option A: automated GitHub releases (recommended).** Push this folder to GitHub. To create a release:
+**Option A: automated GitHub builds (recommended).** Push this folder to GitHub. To create a release:
 
 1. Test locally: `.\Install.cmd` or `dotnet run --project src\AllianceStatus`
 2. Push a tag: `git tag v1.0.0 && git push --tags`
 3. The workflow automatically builds and publishes a Release
 
-Download `AllianceStatus-Setup.exe` from the Release and double-click it. No admin rights needed. It installs to
-`%LOCALAPPDATA%\Programs\AllianceStatus`, adds a Start menu entry, optionally starts with Windows,
-and uninstalls from Settings → Apps.
+Download `AllianceStatus-Setup.exe` from the Release and double-click it.
 
-You can also manually trigger a build (Actions tab → "Run workflow"), but it won't create a Release—just artifacts.
+### Installation steps
+
+1. Double-click `AllianceStatus-Setup.exe`.
+
+2. **Windows SmartScreen warning** (normal for unsigned apps):
+   - Click **Informations complémentaires** (or **More info** on English Windows).
+   - Click **Exécuter quand même** (or **Run anyway**).
+
+   ![Windows SmartScreen prompt](README-images/windows-defender-prompt.png)
+
+3. The installer opens and asks:
+   - Install location (defaults to `%LOCALAPPDATA%\Programs\AllianceStatus`)
+   - Whether to start with Windows (optional)
+
+4. Done. The app opens and sits in the notification area (bottom-right of the taskbar).
+
+   ![Alliance Status overview after first install](README-images/app-overview.png)
+
+No admin rights needed. Uninstall from Settings → Apps → Alliance Status.
 
 **Option B: double-click `Install.cmd`.** Builds and installs on your own PC. If the .NET 10 SDK
 isn't installed, it downloads a temporary private copy (about 200 MB) and deletes it afterwards.
 Same per-user install with a Settings → Apps entry.
+
+**Option C: unzip and run.** Unzip `AllianceStatus-win-x64-standalone.zip` and run `AllianceStatus.exe`
+directly from anywhere (USB stick, custom folder, etc.). No installer, no Start menu entry.
 
 **Local build:** `.\publish.ps1 -Mode standalone`, then `ISCC.exe installer\AllianceStatus.iss`
 ([Inno Setup 6](https://jrsoftware.org/isinfo.php), free).
@@ -95,6 +114,24 @@ dotnet publish src\AllianceStatus -c Release -r win-x64 --self-contained true `
 - **Settings** (gear icon) lists the clusters found on status.alliancecan.ca. Tick the ones you care about.
   Nibi is selected by default. You can also paste any other RSS or Atom feed URL.
 - Launching the exe again while it is running simply opens the overview.
+
+### Settings
+
+![Settings window showing cluster selection](README-images/settings.png)
+
+- **Clusters:** tick which Alliance clusters you want to monitor. The list is refreshed daily from status.alliancecan.ca.
+- **Other feeds:** paste any RSS or Atom feed URL to add it. Remove feeds by clicking the trash icon.
+- **General:** "Start with Windows" runs the app minimized when you sign in.
+
+#### Change the version number
+
+The version displayed in Settings ("Alliance Status 1.0.0") comes from `src/AllianceStatus/AllianceStatus.csproj`:
+
+```xml
+<Version>1.0.0</Version>
+```
+
+Change this line to `1.1.0` or any version you want, then rebuild or publish. The new version appears in the Settings footer.
 
 Command-line switches:
 
