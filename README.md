@@ -19,19 +19,24 @@ Written by **Claude** (Anthropic's AI model, Claude Opus 5.5), initiated and co-
 
 ## Install
 
-**Option A: real installer (recommended).** Put this folder in a GitHub repository, open the
-**Actions** tab, choose **Build installer**, and select **Run workflow**. A few minutes later,
-download `AllianceStatus-Setup.exe` from the run's artifacts. Double-click it to install; no admin
-rights are needed. Pushing a tag such as `v1.0.0` also publishes it as a GitHub Release, so anyone can
-download it. It installs to `%LOCALAPPDATA%\Programs\AllianceStatus`, adds a Start menu entry,
-optionally starts with Windows, and uninstalls from Settings → Apps.
+**Option A: automated GitHub releases (recommended).** Push this folder to GitHub. To create a release:
 
-**Option B: double-click `Install.cmd`.** It builds and installs on your own PC. If the .NET 10 SDK
+1. Test locally: `.\Install.cmd` or `dotnet run --project src\AllianceStatus`
+2. Push a tag: `git tag v1.0.0 && git push --tags`
+3. The workflow automatically builds and publishes a Release
+
+Download `AllianceStatus-Setup.exe` from the Release and double-click it. No admin rights needed. It installs to
+`%LOCALAPPDATA%\Programs\AllianceStatus`, adds a Start menu entry, optionally starts with Windows,
+and uninstalls from Settings → Apps.
+
+You can also manually trigger a build (Actions tab → "Run workflow"), but it won't create a Release—just artifacts.
+
+**Option B: double-click `Install.cmd`.** Builds and installs on your own PC. If the .NET 10 SDK
 isn't installed, it downloads a temporary private copy (about 200 MB) and deletes it afterwards.
-The result is the same per-user install, including an entry in Settings → Apps.
+Same per-user install with a Settings → Apps entry.
 
-To make the installer locally instead: `.\publish.ps1 -Mode standalone`, then
-`ISCC.exe installer\AllianceStatus.iss` ([Inno Setup 6](https://jrsoftware.org/isinfo.php), free).
+**Local build:** `.\publish.ps1 -Mode standalone`, then `ISCC.exe installer\AllianceStatus.iss`
+([Inno Setup 6](https://jrsoftware.org/isinfo.php), free).
 
 ## Requirements
 
