@@ -11,8 +11,8 @@
 AppId={{B7E3C2A4-5D19-4F6B-9C8E-2A7F1D3E4B50}
 AppName={#AppName}
 AppVersion={#AppVersion}
-AppPublisher=Ferdinand Koenig and Claude (Anthropic)
-AppComments=Written by Claude (Anthropic), initiated and co-developed by Ferdinand Koenig.
+AppPublisher=Ferdinand Koenig
+AppComments=By Ferdinand Koenig, with assistance from Claude (Anthropic).
 DefaultDirName={localappdata}\Programs\AllianceStatus
 DisableDirPage=yes
 DisableProgramGroupPage=yes

@@ -60,7 +60,7 @@ try {
     $props = @{
         DisplayName     = 'Alliance Status'
         DisplayVersion  = '1.0.0'
-        Publisher       = 'Ferdinand Koenig and Claude (Anthropic)'
+        Publisher       = 'Ferdinand Koenig'
         DisplayIcon     = $exe
         InstallLocation = $installDir
         UninstallString = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$installDir\uninstall.ps1`""

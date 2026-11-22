@@ -21,8 +21,8 @@
     <Product>Alliance Status</Product>
     <Title>Alliance Status</Title>
     <Description>Tray monitor for Digital Research Alliance of Canada cluster status feeds.</Description>
-    <Authors>Ferdinand Koenig; Claude (Anthropic)</Authors>
-    <Copyright>Ferdinand Koenig and Claude (Anthropic)</Copyright>
+    <Authors>Ferdinand Koenig</Authors>
+    <Copyright>Copyright (c) 2026 Ferdinand Koenig</Copyright>
     <!-- Local builds are "development builds" (0.0.0, no update check).
          Release builds get their version from the git tag (-p:Version=...). -->
     <Version>0.0.0</Version>
