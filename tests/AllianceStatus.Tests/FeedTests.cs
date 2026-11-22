@@ -138,3 +138,31 @@ public class IncidentRulesTests
         Assert.Equal(IncidentState.Active, IncidentRules.Classify(Make("Maintenance", Now.AddHours(-1), Now.AddHours(3)), Now));
     }
 }
+
+public class UpdateCheckerTests
+{
+    [Theory]
+    [InlineData("v0.1.4", "0.1.4")]
+    [InlineData("0.1.4", "0.1.4")]
+    [InlineData("v1.2", "1.2.0")]
+    [InlineData("v0.10.0-beta", "0.10.0")]
+    public void ParsesTags(string tag, string expected)
+    {
+        Assert.True(UpdateChecker.TryParse(tag, out var v));
+        Assert.Equal(Version.Parse(expected), v);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("latest")]
+    public void RejectsBadTags(string? tag) => Assert.False(UpdateChecker.TryParse(tag, out _));
+
+    [Fact]
+    public void ComparesNumerically()
+    {
+        UpdateChecker.TryParse("v0.1.10", out var newer);
+        UpdateChecker.TryParse("v0.1.9", out var older);
+        Assert.True(newer > older);
+    }
+}

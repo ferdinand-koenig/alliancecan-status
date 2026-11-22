@@ -23,8 +23,9 @@
     <Description>Tray monitor for Digital Research Alliance of Canada cluster status feeds.</Description>
     <Authors>Ferdinand Koenig; Claude (Anthropic)</Authors>
     <Copyright>Ferdinand Koenig and Claude (Anthropic)</Copyright>
-    <!-- Default version for local builds. Release builds override it from the git tag (-p:Version=...). -->
-    <Version>1.0.0</Version>
+    <!-- Local builds are "development builds" (0.0.0, no update check).
+         Release builds get their version from the git tag (-p:Version=...). -->
+    <Version>0.0.0</Version>
 
     <!-- Keep the footprint small. -->
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>

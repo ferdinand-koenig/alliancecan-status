@@ -39,6 +39,13 @@ public sealed class AppState
     public DateTimeOffset? DiscoveredAt { get; set; }
     public DateTimeOffset? LastCheck { get; set; }
 
+    // Update checker
+    public DateTimeOffset? LastUpdateCheck { get; set; }
+    public string? LatestVersion { get; set; }
+    public string? LatestUrl { get; set; }
+    /// <summary>Last version we showed an update toast for (one toast per version).</summary>
+    public string? NotifiedUpdate { get; set; }
+
     public static AppState CreateDefault() => new()
     {
         Subscriptions = { new Subscription { Name = "Nibi", Url = Alliance.FeedUrl("Nibi") } },

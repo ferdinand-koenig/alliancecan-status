@@ -13,6 +13,7 @@ public partial class App : Application
 {
     StateStore? _store;
     StatusMonitor? _monitor;
+    UpdateChecker? _updates;
     TrayIcon? _tray;
     FlyoutWindow? _flyout;
     long _flyoutClosedAt;
@@ -57,6 +58,7 @@ public partial class App : Application
 
         _monitor = new StatusMonitor(state, _store, Dispatcher);
         _monitor.Changed += UpdateTray;
+        _updates = new UpdateChecker(state, _store, Dispatcher);
 
         _tray = new TrayIcon();
         _tray.OpenRequested += ToggleFlyout;
@@ -75,6 +77,7 @@ public partial class App : Application
 
         UpdateTray();
         _monitor.Start(); // fetch immediately, then every 30 minutes
+        _updates.Start(); // GitHub release check, once a day
 
         bool quiet = e.Args.Any(a => a.Equals(Autostart.Flag, StringComparison.OrdinalIgnoreCase))
                      || ToastNotificationManagerCompat.WasCurrentProcessToastActivated();
@@ -122,13 +125,13 @@ public partial class App : Application
 
     void ShowFlyout()
     {
-        if (_monitor is null) return;
+        if (_monitor is null || _updates is null) return;
         if (_flyout is not null)
         {
             _flyout.Activate();
             return;
         }
-        _flyout = new FlyoutWindow(_monitor, Quit);
+        _flyout = new FlyoutWindow(_monitor, _updates, Quit);
         _flyout.Closed += (_, _) =>
         {
             _flyout = null;
@@ -142,6 +145,7 @@ public partial class App : Application
     {
         _flyout?.Close();
         _monitor?.Dispose();
+        _updates?.Dispose();
         _tray?.Dispose();
         _tray = null;
         SingleInstance.Release();

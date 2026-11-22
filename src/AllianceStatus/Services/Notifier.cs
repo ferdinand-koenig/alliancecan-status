@@ -78,6 +78,27 @@ public static class Notifier
             });
     }
 
+    public static void ShowUpdate(string version, string url)
+    {
+        try
+        {
+            new ToastContentBuilder()
+                .AddArgument("url", url)
+                .AddText("Update available")
+                .AddText($"Alliance Status {version} is ready to download.")
+                .AddText("Select to open the download page. Your settings are kept.")
+                .Show(toast =>
+                {
+                    toast.Tag = "update";
+                    toast.Group = "update";
+                });
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Could not show update notification", ex);
+        }
+    }
+
     static string Tag(string key) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)))[..16];
 }

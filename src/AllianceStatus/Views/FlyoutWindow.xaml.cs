@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -21,6 +20,7 @@ public partial class FlyoutWindow : Window
     const double ScreenGap = 12;
 
     readonly StatusMonitor _monitor;
+    readonly UpdateChecker _updates;
     readonly Action _quit;
     readonly DispatcherTimer _clock;
     readonly ObservableCollection<ClusterOption> _clusters = new();
@@ -29,21 +29,22 @@ public partial class FlyoutWindow : Window
     System.Drawing.Rectangle _workArea, _screenBounds;
     bool _closing, _spinning, _loadingSettings;
 
-    public FlyoutWindow(StatusMonitor monitor, Action quit)
+    public FlyoutWindow(StatusMonitor monitor, UpdateChecker updates, Action quit)
     {
         _monitor = monitor;
+        _updates = updates;
         _quit = quit;
         InitializeComponent();
 
         ClusterList.ItemsSource = _clusters;
         CustomList.ItemsSource = _custom;
-        var version = Assembly.GetExecutingAssembly().GetName().Version;
-        CreditsText.Text = $"Alliance Status {version?.ToString(3)}. Written by Claude (Anthropic), initiated and co-developed by Ferdinand Koenig.";
+        CreditsText.Text = $"Alliance Status {UpdateChecker.CurrentText}. By Ferdinand Koenig, with assistance from Claude (Anthropic).";
 
         _clock = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
         _clock.Tick += (_, _) => RenderFooter(_monitor.BuildView(DateTimeOffset.Now));
 
         _monitor.Changed += Render;
+        _updates.Changed += RenderUpdate;
         ThemeManager.ThemeChanged += OnThemeChanged;
 
         SourceInitialized += (_, _) =>
@@ -65,10 +66,12 @@ public partial class FlyoutWindow : Window
         {
             _clock.Stop();
             _monitor.Changed -= Render;
+            _updates.Changed -= RenderUpdate;
             ThemeManager.ThemeChanged -= OnThemeChanged;
         };
 
         Render();
+        RenderUpdate();
     }
 
     // ---- Placement & motion --------------------------------------------------------------
@@ -250,6 +253,20 @@ public partial class FlyoutWindow : Window
             RefreshSpin.Angle = 0;
         }
     }
+
+    /// <summary>Blue dot on the gear, and a download card at the top of Settings.</summary>
+    void RenderUpdate()
+    {
+        bool show = _updates.UpdateAvailable;
+        UpdateDot.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        UpdatePanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        SettingsButton.ToolTip = show ? "Settings (update available)" : "Settings";
+        if (!show) return;
+        UpdateTitle.Text = $"Version {_updates.LatestVersion} is available";
+        UpdateSubtitle.Text = $"You have {UpdateChecker.CurrentText}. Install it over this one; your settings are kept.";
+    }
+
+    void Update_Click(object sender, RoutedEventArgs e) => Shell.OpenUrl(_updates.DownloadPage);
 
     async void Refresh_Click(object sender, RoutedEventArgs e) => await _monitor.RefreshAsync();
 
