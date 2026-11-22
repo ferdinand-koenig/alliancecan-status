@@ -55,6 +55,27 @@ public static class Alliance
             if (name.Length is > 0 and <= 40 && !name.Contains('.')) names.Add(name);
         }
         if (names.Count == 0) throw new FeedFormatException("No clusters listed on the status page");
-        return names.ToList();
+
+        // Some entries (e.g. Globus, Nuage) have a status page but no feed. Keep only names whose feed parses.
+        var checks = await Task.WhenAll(names.Select(async n => (Name: n, Ok: await HasFeedAsync(n, ct).ConfigureAwait(false))))
+            .ConfigureAwait(false);
+        return checks.Where(c => c.Ok).Select(c => c.Name).ToList();
+    }
+
+    static async Task<bool> HasFeedAsync(string cluster, CancellationToken ct)
+    {
+        try
+        {
+            FeedParser.Parse(await FeedClient.GetStringAsync(FeedUrl(cluster), ct).ConfigureAwait(false));
+            return true;
+        }
+        catch (Exception ex) when (ex is FeedFormatException or FeedNotFoundException)
+        {
+            return false; // a web page or a 404: no feed for this entry
+        }
+        catch (Exception)
+        {
+            return true; // network trouble: don't hide a cluster we couldn't check
+        }
     }
 }

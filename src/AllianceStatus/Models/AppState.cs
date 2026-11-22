@@ -37,6 +37,8 @@ public sealed class AppState
     public Dictionary<string, FeedHealth> Feeds { get; set; } = new();
     public List<string> DiscoveredClusters { get; set; } = new();
     public DateTimeOffset? DiscoveredAt { get; set; }
+    /// <summary>True once the cluster list was made by a version that drops entries without a feed.</summary>
+    public bool DiscoveryChecksFeeds { get; set; }
     public DateTimeOffset? LastCheck { get; set; }
 
     /// <summary>Version of the classification rules the stored notification records were made with.</summary>

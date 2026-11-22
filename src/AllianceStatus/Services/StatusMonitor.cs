@@ -325,7 +325,7 @@ public sealed class StatusMonitor : IDisposable
     }
 
     public bool DiscoveryStale =>
-        _state.DiscoveredAt is not { } at || DateTimeOffset.Now - at > DiscoveryMaxAge;
+        !_state.DiscoveryChecksFeeds || _state.DiscoveredAt is not { } at || DateTimeOffset.Now - at > DiscoveryMaxAge;
 
     public async Task<bool> DiscoverAsync()
     {
@@ -334,6 +334,7 @@ public sealed class StatusMonitor : IDisposable
             var names = await Alliance.DiscoverAsync(CancellationToken.None);
             _state.DiscoveredClusters = names;
             _state.DiscoveredAt = DateTimeOffset.Now;
+            _state.DiscoveryChecksFeeds = true;
             _store.Save(_state);
             return true;
         }

@@ -12,6 +12,8 @@ when something breaks, is scheduled, or gets fixed.
 - Follows Windows light/dark mode and accent color; Windows 11 rounded corners.
 - Optional start with Windows. No accounts, no cloud, no telemetry.
 
+![Alliance Status showing an ongoing, an upcoming and a past incident](README-images/app-overview-large.png)
+
 ## Colors
 
 | Color | Meaning |
