@@ -37,18 +37,12 @@ because the feed has no field for that.
 
 ## Credits
 
-Written by **Claude** (Anthropic's AI model, Claude Opus 5.5), initiated and co-developed by
-**Ferdinand Koenig**.
+Initiated and developed by **Ferdinand Koenig**. Code written with assistance from **Claude** (Anthropic).
 
 ## Install
 
-**Option A: automated GitHub builds (recommended).** Push this folder to GitHub. To create a release:
-
-1. Test locally: `.\Install.cmd` or `dotnet run --project src\AllianceStatus`
-2. Push a tag: `git tag v1.0.0 && git push --tags`
-3. The workflow automatically builds and publishes a Release
-
-Download `AllianceStatus-Setup.exe` from the Release and double-click it.
+Download `AllianceStatus-Setup.exe` from the
+[latest release](https://github.com/ferdinand-koenig/alliancecan-status/releases/latest).
 
 ### Installation steps
 
@@ -63,9 +57,8 @@ Download `AllianceStatus-Setup.exe` from the Release and double-click it.
 
      ![SmartScreen, second screen](README-images/windows-defender-prompt.png)
 
-3. The installer opens and asks:
-   - Install location (defaults to `%LOCALAPPDATA%\Programs\AllianceStatus`)
-   - Whether to start with Windows (optional)
+3. The installer asks whether to start Alliance Status with Windows, then installs to
+   `%LOCALAPPDATA%\Programs\AllianceStatus`.
 
 4. Done. The app opens and sits in the notification area (bottom-right of the taskbar).
 
@@ -75,23 +68,25 @@ No admin rights needed. Uninstall from Settings → Apps → Alliance Status.
 
 **Option B: double-click `Install.cmd`.** Builds and installs on your own PC. If the .NET 10 SDK
 isn't installed, it downloads a temporary private copy (about 200 MB) and deletes it afterwards.
-Same per-user install with a Settings → Apps entry.
+Same per-user install with a Settings → Apps entry. It builds a "development build", which doesn't check for updates.
 
 **Option C: unzip and run.** Unzip `AllianceStatus-win-x64-standalone.zip` and run `AllianceStatus.exe`
-directly from anywhere (USB stick, custom folder, etc.). No installer, no Start menu entry.
+directly from anywhere (USB stick, custom folder, etc.). No installer, no Start menu entry. One-click updates install the regular version; they don't update this portable copy.
 
 **Local build:** `.\publish.ps1 -Mode standalone`, then `ISCC.exe installer\AllianceStatus.iss`
 ([Inno Setup 6](https://jrsoftware.org/isinfo.php), free).
 
 ### Updates
 
-The app checks GitHub once a day. When a new version is out, you get one notification, and a
-blue dot appears on the gear icon. Open **Settings** to find the **Download** button. Install the
-new version over the old one; your clusters and settings are kept.
+The app checks GitHub once a day. When a new version is out, you get one notification and a
+blue dot appears on the gear icon. Click the notification, or open **Settings** and click
+**Install**: the app downloads the new version, checks that the file is intact, installs it,
+and restarts. Your clusters and settings are kept. **Check for updates** in Settings checks
+right away.
 
 ## Requirements
 
-| To run | Windows 10 1809+ or Windows 11 (x64 or ARM64) |
+| To run | Windows 10 1809+ or Windows 11 (x64; ARM64 through emulation) |
 |---|---|
 | To build | [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) |
 
@@ -141,8 +136,7 @@ dotnet publish src\AllianceStatus -c Release -r win-x64 --self-contained true `
 
 - **Left-click** the tray icon to open or close the overview. Press Esc or click elsewhere to close it.
 - **Right-click** for Open, Refresh now, Start with Windows, Open status website, Quit.
-- The tray icon badge is **red** for an active incident, **amber** for scheduled maintenance,
-  **grey** when a feed can't be reached, and absent when everything is fine.
+- The tray icon's dot shows the overall status; see [Colors](#colors).
 - **Settings** (gear icon) lists the clusters found on status.alliancecan.ca. Tick the ones you care about.
   Nibi is selected by default. You can also paste any other RSS or Atom feed URL.
 - Launching the exe again while it is running simply opens the overview.
@@ -151,26 +145,11 @@ dotnet publish src\AllianceStatus -c Release -r win-x64 --self-contained true `
 
 ![Settings window showing cluster selection](README-images/settings.png)
 
-- **Clusters:** tick which Alliance clusters you want to monitor. The list is refreshed daily from status.alliancecan.ca.
-- **Other feeds:** paste any RSS or Atom feed URL to add it. Remove feeds by clicking the trash icon.
+- **Clusters:** tick which Alliance clusters you want to monitor. The list is refreshed daily from
+  status.alliancecan.ca; entries without a status feed are hidden.
+- **Other feeds:** paste any RSS or Atom feed URL to add it. Remove a feed with its ✕ button.
 - **General:** "Start with Windows" runs the app minimized when you sign in.
-
-#### Change the version number
-
-The version displayed in Settings ("Alliance Status 1.0.0") comes from `src/AllianceStatus/AllianceStatus.csproj`:
-
-```xml
-<Version>1.0.0</Version>
-```
-
-Change this line to `1.1.0` or any version you want, then rebuild or publish. The new version appears in the Settings footer.
-
-Command-line switches:
-
-| Switch | Effect |
-|---|---|
-| `--minimized` | Start without opening the overview (used by autostart) |
-| `--cleanup` | Remove the autostart entry and toast registration, then exit (run before deleting the app) |
+- **Version:** shown at the bottom, with **Check for updates**.
 
 ## Where data lives
 
@@ -183,7 +162,8 @@ Everything is in `%LOCALAPPDATA%\AllianceStatus\`:
 
 Autostart uses the per-user `HKCU\…\CurrentVersion\Run` key, so no admin rights are needed.
 
-To uninstall: right-click → Quit, run `AllianceStatus.exe --cleanup`, then delete the exe and the data folder.
+To uninstall: Settings → Apps → Alliance Status. For the portable copy: right-click → Quit,
+run `AllianceStatus.exe --cleanup`, then delete the exe and the data folder.
 
 ## How it works
 
@@ -197,6 +177,8 @@ src/AllianceStatus
 │  └─ Alliance.cs           feed URL scheme and cluster discovery
 ├─ Services/
 │  ├─ StatusMonitor.cs      polling, merge, pruning, notification decisions
+│  ├─ UpdateChecker.cs      daily GitHub release check, download, checksum, silent install
+│  ├─ SemVer.cs             version numbers (MAJOR.MINOR.PATCH)
 │  ├─ IncidentRules.cs      active / upcoming / past classification
 │  ├─ Notifier.cs           Windows toasts
 │  ├─ TrayIcon.cs           notification-area icon (drawn at runtime) and themed menu
@@ -225,6 +207,9 @@ wording such as *resolved*, *completed*, *restored*, *cancelled* in the status, 
 (but not "not resolved" or "will be completed"); the entry disappearing from the feed; and, for open-ended
 entries, 14 days without activity. An entry with a future start is **upcoming**; one whose end has passed
 or that reads as resolved is **past**.
+Alliance feeds are read more precisely: each entry's `published` date is the start and its `updated`
+date the end; `updated` = `None` means the incident is still ongoing, and the 14-day rule doesn't
+apply to them.
 
 **No duplicate notifications.** For every incident the app stores a fingerprint of its title, text, status
 and schedule, plus the state at the time. A toast is shown only when an incident is new (and not already over),
@@ -243,3 +228,16 @@ inside a check and a 5-minute retry interval between checks until the feed recov
 - **A cluster is missing from the list:** the list comes from the status home page and refreshes daily.
   You can always paste its feed URL (`https://status.alliancecan.ca/system/<Name>/feed.rss`) under Other feeds.
 - **Something looks wrong:** see `%LOCALAPPDATA%\AllianceStatus\log.txt`.
+- **An update fails:** see `%TEMP%\AllianceStatus-Update\install.log`, or download the installer
+  from the [latest release](https://github.com/ferdinand-koenig/alliancecan-status/releases/latest).
+
+## Releasing (maintainers)
+
+Push a plain version tag, for example `git tag v0.2.1 && git push origin v0.2.1`. The workflow
+builds the installer with that version and publishes it as the latest release; installed apps
+offer it as an update within a day. Tags with a suffix (`v0.2.1-beta`) are ignored. README and
+screenshot changes need no tag.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
