@@ -139,31 +139,37 @@ public class IncidentRulesTests
     }
 }
 
-public class UpdateCheckerTests
+public class SemVerTests
 {
     [Theory]
-    [InlineData("v0.1.4", "0.1.4")]
-    [InlineData("0.1.4", "0.1.4")]
-    [InlineData("v1.2", "1.2.0")]
-    [InlineData("v0.10.0-beta", "0.10.0")]
-    public void ParsesTags(string tag, string expected)
+    [InlineData("v0.1.5", "0.1.5")]
+    [InlineData("0.1.5", "0.1.5")]
+    [InlineData("0.1.5+3fc5616", "0.1.5")]   // InformationalVersion with commit
+    public void Parses(string text, string expected)
     {
-        Assert.True(UpdateChecker.TryParse(tag, out var v));
-        Assert.Equal(Version.Parse(expected), v);
+        Assert.True(SemVer.TryParse(text, out var v));
+        Assert.Equal(expected, v.ToString());
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData("")]
     [InlineData("latest")]
-    public void RejectsBadTags(string? tag) => Assert.False(UpdateChecker.TryParse(tag, out _));
+    [InlineData("v1.2")]            // needs all three parts
+    [InlineData("v0.1.5-beta.1")]   // test versions are filtered out
+    [InlineData("0.1.5-rc.1")]
+    public void Rejects(string? text) => Assert.False(SemVer.TryParse(text, out _));
 
-    [Fact]
-    public void ComparesNumerically()
+    [Theory]
+    [InlineData("0.1.10", "0.1.9")]
+    [InlineData("0.2.0", "0.1.99")]
+    [InlineData("1.0.0", "0.9.9")]
+    public void Orders(string newer, string older)
     {
-        UpdateChecker.TryParse("v0.1.10", out var newer);
-        UpdateChecker.TryParse("v0.1.9", out var older);
-        Assert.True(newer > older);
+        SemVer.TryParse(newer, out var a);
+        SemVer.TryParse(older, out var b);
+        Assert.True(a > b);
+        Assert.True(b < a);
     }
 }
 

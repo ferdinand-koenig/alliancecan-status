@@ -78,15 +78,15 @@ public static class Notifier
             });
     }
 
-    public static void ShowUpdate(string version, string url)
+    public static void ShowUpdate(string version)
     {
         try
         {
             new ToastContentBuilder()
-                .AddArgument("url", url)
+                .AddArgument("action", "install-update")
                 .AddText("Update available")
-                .AddText($"Alliance Status {version} is ready to download.")
-                .AddText("Select to open the download page. Your settings are kept.")
+                .AddText($"Alliance Status {version} is ready.")
+                .AddText("Select to install it. Your settings are kept.")
                 .Show(toast =>
                 {
                     toast.Tag = "update";

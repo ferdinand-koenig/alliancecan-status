@@ -27,7 +27,7 @@ public partial class FlyoutWindow : Window
     readonly ObservableCollection<Subscription> _custom = new();
 
     System.Drawing.Rectangle _workArea, _screenBounds;
-    bool _closing, _spinning, _loadingSettings;
+    bool _closing, _spinning, _loadingSettings, _installing;
 
     public FlyoutWindow(StatusMonitor monitor, UpdateChecker updates, Action quit)
     {
@@ -261,12 +261,61 @@ public partial class FlyoutWindow : Window
         UpdateDot.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         UpdatePanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         SettingsButton.ToolTip = show ? "Settings (update available)" : "Settings";
-        if (!show) return;
+        if (!show || _installing) return;
         UpdateTitle.Text = $"Version {_updates.LatestVersion} is available";
-        UpdateSubtitle.Text = $"You have {UpdateChecker.CurrentText}. Install it over this one; your settings are kept.";
+        UpdateSubtitle.Text = $"You have {UpdateChecker.CurrentText}. Your settings are kept.";
+        UpdateSubtitle.Foreground = ThemeManager.Brush("TextTertiary");
+        InstallButton.IsEnabled = true;
     }
 
-    void Update_Click(object sender, RoutedEventArgs e) => Shell.OpenUrl(_updates.DownloadPage);
+    void Install_Click(object sender, RoutedEventArgs e) => InstallUpdate();
+
+    void ReleaseNotes_Click(object sender, RoutedEventArgs e) => Shell.OpenUrl(_updates.DownloadPage);
+
+    /// <summary>Downloads, verifies and silently installs the update, then quits so the installer can replace the app.</summary>
+    public async void InstallUpdate()
+    {
+        if (_installing || !_updates.UpdateAvailable) return;
+        _installing = true;
+        if (SettingsPage.Visibility != Visibility.Visible) ShowSettings();
+        InstallButton.IsEnabled = false;
+        UpdateSubtitle.Foreground = ThemeManager.Brush("TextTertiary");
+        UpdateSubtitle.Text = "Downloading…";
+        try
+        {
+            await _updates.InstallAsync(new Progress<int>(p => UpdateSubtitle.Text = $"Downloading… {p} %"));
+            UpdateSubtitle.Text = "Installing. Alliance Status restarts in a moment.";
+            await System.Threading.Tasks.Task.Delay(800);
+            _quit();
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Update install failed", ex);
+            _installing = false;
+            InstallButton.IsEnabled = true;
+            UpdateSubtitle.Foreground = ThemeManager.Brush("Critical");
+            UpdateSubtitle.Text = ex is InvalidOperationException
+                ? ex.Message + " You can also use \"What's new\" to download it."
+                : "The installer couldn't be started. Use \"What's new\" to download it.";
+        }
+    }
+
+    async void CheckUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        if (UpdateChecker.IsDevelopmentBuild)
+        {
+            UpdateStatus.Text = "Development builds don't check for updates.";
+            return;
+        }
+        CheckUpdatesButton.IsEnabled = false;
+        UpdateStatus.Text = "Checking…";
+        bool ok = await _updates.CheckNowAsync();
+        if (_closing) return;
+        CheckUpdatesButton.IsEnabled = true;
+        UpdateStatus.Text = !ok ? "Couldn't reach GitHub. Try again later."
+            : _updates.UpdateAvailable ? $"Version {_updates.LatestVersion} is available (see above)."
+            : $"You have the latest version ({UpdateChecker.CurrentText}).";
+    }
 
     async void Refresh_Click(object sender, RoutedEventArgs e) => await _monitor.RefreshAsync();
 
@@ -302,6 +351,7 @@ public partial class FlyoutWindow : Window
         _loadingSettings = false;
 
         CustomMessage.Visibility = Visibility.Collapsed;
+        UpdateStatus.Text = $"Version {UpdateChecker.CurrentText}";
         RebuildClusterOptions();
         DiscoverIfNeeded();
     }

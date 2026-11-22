@@ -46,6 +46,8 @@ public sealed class AppState
     public DateTimeOffset? LastUpdateCheck { get; set; }
     public string? LatestVersion { get; set; }
     public string? LatestUrl { get; set; }
+    public string? LatestSetupUrl { get; set; }
+    public string? LatestSetupSha256 { get; set; }
     /// <summary>Last version we showed an update toast for (one toast per version).</summary>
     public string? NotifiedUpdate { get; set; }
 

@@ -89,7 +89,12 @@ public partial class App : Application
         var args = ToastArguments.Parse(e.Argument);
         Dispatcher.InvokeAsync(() =>
         {
-            if (args.TryGetValue("url", out string url)) Shell.OpenUrl(url);
+            if (args.TryGetValue("action", out string action) && action == "install-update")
+            {
+                ShowFlyout();
+                _flyout?.InstallUpdate();
+            }
+            else if (args.TryGetValue("url", out string url)) Shell.OpenUrl(url);
             else ShowFlyout();
         });
     }
