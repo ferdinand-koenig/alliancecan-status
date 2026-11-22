@@ -166,3 +166,64 @@ public class UpdateCheckerTests
         Assert.True(newer > older);
     }
 }
+
+public class ScheduleTests
+{
+    static readonly DateTimeOffset Now = new(2026, 11, 22, 17, 18, 0, TimeSpan.Zero);
+
+    const string NibiFeed = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <feed xmlns="http://www.w3.org/2005/Atom">
+          <title>Incident Feed - Nibi</title>
+          <updated>2026-11-22 17:18:29+00:00</updated>
+          <entry>
+            <id>1782</id>
+            <title>Planned Outage - Arrêt planifié</title>
+            <content type="html">&lt;h4&gt;Due to physical adjustment of equipment, the Nibi cluster will be unavailable from 8:00 AM Tuesday, November 24 to 4:00 PM EST Wednesday, November 25, 2026.&lt;/h4&gt;</content>
+            <link href="https://status.alliancecan.ca/view_incident?incident=1782"/>
+            <updated>2026-11-25 21:00</updated>
+            <published>2026-11-24 13:00</published>
+          </entry>
+        </feed>
+        """;
+
+    static Incident ToIncident(string feedUrl, FeedItem item)
+    {
+        var inc = new Incident { Key = "k", FeedUrl = feedUrl, Cluster = "Nibi", Title = item.Title, Summary = item.Summary,
+                                 Published = item.Published, Updated = item.Updated, FirstSeen = Now };
+        (inc.Start, inc.End) = IncidentRules.Schedule(feedUrl, item, Now);
+        return inc;
+    }
+
+    [Fact]
+    public void AllianceDatesAreTheOutageWindow()
+    {
+        var url = Alliance.FeedUrl("Nibi");
+        var item = Assert.Single(FeedParser.Parse(NibiFeed).Items);
+        var inc = ToIncident(url, item);
+
+        Assert.Equal(new DateTimeOffset(2026, 11, 24, 13, 0, 0, TimeSpan.Zero), inc.Start);
+        Assert.Equal(new DateTimeOffset(2026, 11, 25, 21, 0, 0, TimeSpan.Zero), inc.End);
+        Assert.Equal(IncidentState.Upcoming, IncidentRules.Classify(inc, Now));
+        Assert.Equal(IncidentState.Active, IncidentRules.Classify(inc, new DateTimeOffset(2026, 11, 25, 12, 0, 0, TimeSpan.Zero)));
+        Assert.Equal(IncidentState.Past, IncidentRules.Classify(inc, new DateTimeOffset(2026, 11, 26, 0, 0, 0, TimeSpan.Zero)));
+    }
+
+    [Fact]
+    public void AllianceEntryWithoutEndStaysActive()
+    {
+        var url = Alliance.FeedUrl("Nibi");
+        var item = new FeedItem("1", "Login nodes unreachable", null, "", Now.AddHours(-2), Now.AddHours(-2), null, null, null, null);
+        var inc = ToIncident(url, item);
+        Assert.Null(inc.End);
+        Assert.Equal(IncidentState.Active, IncidentRules.Classify(inc, Now));
+    }
+
+    [Fact]
+    public void OtherFeedsUseFuturePublicationAsStart()
+    {
+        var item = new FeedItem("1", "Upgrade", null, "", Now.AddDays(2), null, null, null, null, null);
+        var inc = ToIncident("https://example.org/feed.xml", item);
+        Assert.Equal(IncidentState.Upcoming, IncidentRules.Classify(inc, Now));
+    }
+}

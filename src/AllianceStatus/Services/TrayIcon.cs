@@ -96,7 +96,8 @@ public sealed class TrayIcon : IDisposable
     }
 }
 
-/// <summary>Draws a pulse glyph that matches the taskbar theme, plus a colored status badge.</summary>
+/// <summary>Draws a pulse glyph that matches the taskbar theme, plus a status badge:
+/// red = ongoing, yellow = upcoming, green = all up, grey = a feed is unreachable.</summary>
 internal static class IconPainter
 {
     public static Icon Create(int size, TrayStatus status, bool darkTaskbar, out IntPtr handle)
@@ -126,7 +127,7 @@ internal static class IconPainter
                 TrayStatus.Active => Color.FromArgb(0xE8, 0x48, 0x55),
                 TrayStatus.Upcoming => Color.FromArgb(0xF7, 0xB5, 0x00),
                 TrayStatus.Offline => Color.FromArgb(0x8A, 0x8A, 0x8A),
-                _ => null,
+                _ => Color.FromArgb(0x3C, 0xB0, 0x43), // all selected clusters up (past incidents don't count)
             };
             if (badge is { } color)
             {

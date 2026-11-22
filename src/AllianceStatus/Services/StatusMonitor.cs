@@ -39,6 +39,12 @@ public sealed class StatusMonitor : IDisposable
     static readonly TimeSpan DiscoveryMaxAge = TimeSpan.FromDays(1);
     static readonly TimeSpan NotificationMemory = TimeSpan.FromDays(60);
 
+    /// <summary>
+    /// Bump when classification changes. Records made under older rules are refreshed
+    /// silently once, so an upgrade doesn't re-announce incidents users already know about.
+    /// </summary>
+    const int CurrentRulesVersion = 2;
+
     readonly AppState _state;
     readonly StateStore _store;
     readonly Dispatcher _ui;
@@ -92,7 +98,9 @@ public sealed class StatusMonitor : IDisposable
             var results = await Task.WhenAll(subs.Select(FetchAsync));
             var now = DateTimeOffset.Now;
             var toasts = new List<PendingToast>();
-            foreach (var r in results) Apply(r, now, toasts);
+            bool silentUpgrade = _state.RulesVersion < CurrentRulesVersion;
+            foreach (var r in results) Apply(r, now, toasts, silentUpgrade);
+            if (silentUpgrade && results.All(r => r.Error is null)) _state.RulesVersion = CurrentRulesVersion;
             Prune(now);
             _state.LastCheck = now;
             _store.Save(_state);
@@ -136,7 +144,7 @@ public sealed class StatusMonitor : IDisposable
         }
     });
 
-    void Apply(FetchResult r, DateTimeOffset now, List<PendingToast> toasts)
+    void Apply(FetchResult r, DateTimeOffset now, List<PendingToast> toasts, bool silentUpgrade)
     {
         var sub = r.Sub;
         if (!_state.Subscriptions.Contains(sub)) return; // unsubscribed while fetching
@@ -173,12 +181,11 @@ public sealed class StatusMonitor : IDisposable
             inc.Categories = item.Categories;
             inc.Published = item.Published;
             inc.Updated = item.Updated;
-            inc.Start = item.Start;
-            inc.End = item.End;
+            (inc.Start, inc.End) = IncidentRules.Schedule(sub.Url, item, now);
             inc.LastSeen = now;
             inc.GoneSince = null;
 
-            QueueNotification(inc, now, toasts);
+            QueueNotification(inc, now, toasts, silentUpgrade);
         }
 
         foreach (var inc in _state.Incidents.Values)
@@ -187,13 +194,21 @@ public sealed class StatusMonitor : IDisposable
     }
 
     /// <summary>Toast only for genuinely new or changed incidents; remember what was sent.</summary>
-    void QueueNotification(Incident inc, DateTimeOffset now, List<PendingToast> toasts)
+    void QueueNotification(Incident inc, DateTimeOffset now, List<PendingToast> toasts, bool silentUpgrade)
     {
         var state = IncidentRules.Classify(inc, now);
         var fingerprint = IncidentRules.Fingerprint(inc);
         _state.Notified.TryGetValue(inc.Key, out var record);
 
-        if (record is null)
+        if (record is null || record.Fingerprint != fingerprint)
+            Log.Info($"{inc.Cluster}: \"{Fmt.Truncate(inc.Title, 60)}\" is {state} " +
+                     $"(start {inc.Start?.ToString("u") ?? "none"}, end {inc.End?.ToString("u") ?? "none"})");
+
+        if (silentUpgrade && record is not null)
+        {
+            // Already known to the user; only the rules changed.
+        }
+        else if (record is null)
         {
             // Old, already-finished entries seen for the first time are recorded silently.
             if (state != IncidentState.Past)

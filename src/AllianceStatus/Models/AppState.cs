@@ -39,6 +39,9 @@ public sealed class AppState
     public DateTimeOffset? DiscoveredAt { get; set; }
     public DateTimeOffset? LastCheck { get; set; }
 
+    /// <summary>Version of the classification rules the stored notification records were made with.</summary>
+    public int RulesVersion { get; set; }
+
     // Update checker
     public DateTimeOffset? LastUpdateCheck { get; set; }
     public string? LatestVersion { get; set; }

@@ -12,6 +12,27 @@ when something breaks, is scheduled, or gets fixed.
 - Follows Windows light/dark mode and accent color; Windows 11 rounded corners.
 - Optional start with Windows. No accounts, no cloud, no telemetry.
 
+## Colors
+
+| Color | Meaning |
+|---|---|
+| 🔴 Red | Ongoing: the outage or maintenance is happening now |
+| 🟡 Yellow | Upcoming: scheduled for the future |
+| ⚪ Grey | Past: finished within the last 7 days |
+
+The **tray icon** shows a dot with the overall status of the clusters you selected:
+
+| Dot | Meaning |
+|---|---|
+| 🟢 Green | All selected clusters are up (past incidents don't count) |
+| 🟡 Yellow | Something is scheduled |
+| 🔴 Red | Something is ongoing |
+| ⚪ Grey | A feed can't be reached right now |
+
+For Alliance feeds, the outage window comes from the feed itself: each entry's publication date is
+the start and its update date is the end. The app doesn't try to tell planned from unplanned outages,
+because the feed has no field for that.
+
 ## Credits
 
 Written by **Claude** (Anthropic's AI model, Claude Opus 5.5), initiated and co-developed by
@@ -56,6 +77,12 @@ directly from anywhere (USB stick, custom folder, etc.). No installer, no Start 
 
 **Local build:** `.\publish.ps1 -Mode standalone`, then `ISCC.exe installer\AllianceStatus.iss`
 ([Inno Setup 6](https://jrsoftware.org/isinfo.php), free).
+
+### Updates
+
+The app checks GitHub once a day. When a new version is out, you get one notification, and a
+blue dot appears on the gear icon. Open **Settings** to find the **Download** button. Install the
+new version over the old one; your clusters and settings are kept.
 
 ## Requirements
 

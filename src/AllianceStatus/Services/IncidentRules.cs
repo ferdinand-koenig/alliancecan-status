@@ -40,6 +40,26 @@ public static class IncidentRules
     public static bool IsMaintenance(Incident i) =>
         MaintenanceRx.IsMatch(i.Title) || MaintenanceRx.IsMatch(i.Categories ?? "") || MaintenanceRx.IsMatch(i.Status ?? "");
 
+    /// <summary>
+    /// Start and end of an entry. Alliance feeds put the outage window in the entry dates:
+    /// &lt;published&gt; is the start and &lt;updated&gt; the end (e.g. 2026-11-24 13:00 and
+    /// 2026-11-25 21:00 UTC for "8:00 AM Nov 24 to 4:00 PM EST Nov 25"). For other feeds,
+    /// explicit or text-derived times are used, and a future publication date counts as the start.
+    /// </summary>
+    public static (DateTimeOffset? Start, DateTimeOffset? End) Schedule(string feedUrl, FeedItem item, DateTimeOffset now)
+    {
+        if (Alliance.ClusterFromFeedUrl(feedUrl) is not null && item.Published is { } published)
+        {
+            DateTimeOffset? end = item.Updated is { } updated && updated > published ? updated : item.End;
+            if (end is { } e && e <= published) end = null;
+            return (published, end);
+        }
+
+        var start = item.Start;
+        if (start is null && item.Published is { } p && p > now) start = p;
+        return (start, item.End);
+    }
+
     public static IncidentState Classify(Incident i, DateTimeOffset now)
     {
         if (i.GoneSince is not null || IsResolved(i)) return IncidentState.Past;
