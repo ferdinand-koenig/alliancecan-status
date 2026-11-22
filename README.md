@@ -63,14 +63,19 @@ Download `AllianceStatus-Setup.exe` from the
 4. Done. The app opens and sits in the notification area (bottom-right of the taskbar).
 
    ![Alliance Status overview after first install](README-images/app-overview.png)
+   
+5. **Choose your clusters:** click the gear icon and tick the clusters you work on
+   (see [Settings](#settings)). Only Nibi is selected at first.
 
 No admin rights needed. Uninstall from Settings → Apps → Alliance Status.
 
-**Option B: double-click `Install.cmd`.** Builds and installs on your own PC. If the .NET 10 SDK
+### Other Installation options (Development build and Portable version)
+
+**Install.cmd (development build):** Builds and installs on your own PC. If the .NET 10 SDK
 isn't installed, it downloads a temporary private copy (about 200 MB) and deletes it afterwards.
 Same per-user install with a Settings → Apps entry. It builds a "development build", which doesn't check for updates.
 
-**Option C: unzip and run.** Unzip `AllianceStatus-win-x64-standalone.zip` and run `AllianceStatus.exe`
+**Portable version:** Unzip `AllianceStatus-win-x64-standalone.zip` and run `AllianceStatus.exe`
 directly from anywhere (USB stick, custom folder, etc.). No installer, no Start menu entry. One-click updates install the regular version; they don't update this portable copy.
 
 **Local build:** `.\publish.ps1 -Mode standalone`, then `ISCC.exe installer\AllianceStatus.iss`
@@ -235,7 +240,7 @@ inside a check and a 5-minute retry interval between checks until the feed recov
 
 Push a plain version tag, for example `git tag v0.2.1 && git push origin v0.2.1`. The workflow
 builds the installer with that version and publishes it as the latest release; installed apps
-offer it as an update within a day. Tags with a suffix (`v0.2.1-beta`) are ignored. README and
+offer it as an update within a day. Tags with a suffix (`v0.2.1-beta`) are ignored for update check. README and
 screenshot changes need no tag.
 
 ## License
