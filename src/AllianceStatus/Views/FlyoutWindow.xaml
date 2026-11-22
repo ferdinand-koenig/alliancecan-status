@@ -97,7 +97,7 @@
                                                             CornerRadius="4" Padding="6,1,6,2" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Cluster}" FontSize="11" FontWeight="SemiBold"/>
                                                     </Border>
-                                                    <TextBlock DockPanel.Dock="Left" Text="{Binding Badge}" Foreground="{Binding Stripe}"
+                                                    <TextBlock DockPanel.Dock="Left" Text="{Binding Badge}" Foreground="{Binding BadgeBrush}"
                                                                FontSize="11" FontWeight="SemiBold" Margin="8,0,0,0"
                                                                VerticalAlignment="Center"/>
                                                     <TextBlock Text="{Binding When}" FontSize="11" Foreground="{DynamicResource TextTertiary}"

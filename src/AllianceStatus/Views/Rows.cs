@@ -24,6 +24,8 @@ public sealed class IncidentRow
     public string Badge { get; init; } = "";
     public string Url { get; init; } = "";
     public Brush Stripe { get; init; } = Brushes.Gray;
+    /// <summary>Badge text ("Scheduled"); a darker shade than the stripe where needed for readability.</summary>
+    public Brush BadgeBrush { get; init; } = Brushes.Gray;
     public double Opacity { get; init; } = 1;
 
     public Visibility SummaryVisibility => Summary.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -52,6 +54,12 @@ public sealed class IncidentRow
                 _ => IncidentRules.IsResolved(i) ? "Resolved" : "Ended",
             },
             Stripe = ThemeManager.Brush(state switch
+            {
+                IncidentState.Active => "Critical",
+                IncidentState.Upcoming => "CautionFill",
+                _ => "Neutral",
+            }),
+            BadgeBrush = ThemeManager.Brush(state switch
             {
                 IncidentState.Active => "Critical",
                 IncidentState.Upcoming => "Caution",

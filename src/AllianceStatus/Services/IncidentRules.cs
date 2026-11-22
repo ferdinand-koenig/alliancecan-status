@@ -16,7 +16,11 @@ public static class IncidentRules
     /// <summary>How long past incidents stay visible.</summary>
     public static readonly TimeSpan PastRetention = TimeSpan.FromDays(7);
 
-    /// <summary>An open-ended incident with no activity for this long is treated as over.</summary>
+    /// <summary>
+    /// An open-ended incident with no activity for this long is treated as over. Not applied to
+    /// Alliance feeds: they list only current incidents, and an ongoing one without a known end
+    /// (&lt;updated&gt;None&lt;/updated&gt;) can legitimately run for weeks.
+    /// </summary>
     public static readonly TimeSpan StaleAfter = TimeSpan.FromDays(14);
 
     // Skips phrases like "not resolved", "will be completed", "until restored".
@@ -65,7 +69,8 @@ public static class IncidentRules
         if (i.GoneSince is not null || IsResolved(i)) return IncidentState.Past;
         if (i.End is { } end && end <= now) return IncidentState.Past;
         if (i.Start is { } start && start > now) return IncidentState.Upcoming;
-        if (i.End is null && now - LastActivity(i) > StaleAfter) return IncidentState.Past;
+        if (i.End is null && Alliance.ClusterFromFeedUrl(i.FeedUrl) is null && now - LastActivity(i) > StaleAfter)
+            return IncidentState.Past;
         return IncidentState.Active;
     }
 

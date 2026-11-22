@@ -226,6 +226,35 @@ public class ScheduleTests
     }
 
     [Fact]
+    public void AllianceOpenEndedIncidentStaysActiveForWeeks()
+    {
+        // Arbutus, Nov 2026: <published>2026-10-05 21:05</published> <updated>None</updated>
+        const string feed = """
+            <feed xmlns="http://www.w3.org/2005/Atom"><title>Incident Feed - Arbutus</title>
+              <entry>
+                <id>1700</id>
+                <title>Ongoing Volume Storage Slowness</title>
+                <content type="html">Volume storage is slower than usual.</content>
+                <updated>None</updated>
+                <published>2026-10-05 21:05</published>
+              </entry>
+            </feed>
+            """;
+        var url = Alliance.FeedUrl("Arbutus");
+        var inc = ToIncident(url, Assert.Single(FeedParser.Parse(feed).Items));
+        Assert.Null(inc.End);
+        Assert.Equal(IncidentState.Active, IncidentRules.Classify(inc, Now));
+    }
+
+    [Fact]
+    public void OtherFeedsStillGoStaleAfter14Days()
+    {
+        var item = new FeedItem("1", "Outage", null, "", Now.AddDays(-20), null, null, null, null, null);
+        var inc = ToIncident("https://example.org/feed.xml", item);
+        Assert.Equal(IncidentState.Past, IncidentRules.Classify(inc, Now));
+    }
+
+    [Fact]
     public void OtherFeedsUseFuturePublicationAsStart()
     {
         var item = new FeedItem("1", "Upgrade", null, "", Now.AddDays(2), null, null, null, null, null);

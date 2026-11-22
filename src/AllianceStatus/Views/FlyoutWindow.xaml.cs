@@ -175,7 +175,7 @@ public partial class FlyoutWindow : Window
         StatusDot.Fill = ThemeManager.Brush(view.Overall switch
         {
             TrayStatus.Active => "Critical",
-            TrayStatus.Upcoming => "Caution",
+            TrayStatus.Upcoming => "CautionFill",
             TrayStatus.Offline => "Neutral",
             _ => "Success",
         });

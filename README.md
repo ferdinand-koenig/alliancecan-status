@@ -54,9 +54,12 @@ Download `AllianceStatus-Setup.exe` from the Release and double-click it.
 
 2. **Windows SmartScreen warning** (normal for unsigned apps):
    - Click **Informations complémentaires** (or **More info** on English Windows).
-   - Click **Exécuter quand même** (or **Run anyway**).
 
-   ![Windows SmartScreen prompt](README-images/windows-defender-prompt.png)
+     ![SmartScreen, first screen](README-images/smartscreen-more-info.png)
+
+   - Then click **Exécuter quand même** (or **Run anyway**).
+
+     ![SmartScreen, second screen](README-images/windows-defender-prompt.png)
 
 3. The installer opens and asks:
    - Install location (defaults to `%LOCALAPPDATA%\Programs\AllianceStatus`)

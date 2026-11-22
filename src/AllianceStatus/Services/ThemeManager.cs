@@ -28,7 +28,7 @@ public static class ThemeManager
         ("SubtleHover", "#0F000000"), ("SubtlePressed", "#08000000"),
         ("ControlFill", "#FFFFFF"), ("ControlStroke", "#D4D4D4"), ("ControlStrokeStrong", "#868686"),
         ("ScrollThumb", "#9A9A9A"),
-        ("Critical", "#C42B1C"), ("Caution", "#9D5D00"), ("Success", "#0F7B0F"), ("Neutral", "#8A8A8A"),
+        ("Critical", "#C42B1C"), ("Caution", "#8A6A00"), ("CautionFill", "#F2B600"), ("Success", "#0F7B0F"), ("Neutral", "#8A8A8A"),
     };
 
     static readonly (string Key, string Hex)[] Dark =
@@ -39,7 +39,7 @@ public static class ThemeManager
         ("SubtleHover", "#14FFFFFF"), ("SubtlePressed", "#0BFFFFFF"),
         ("ControlFill", "#2D2D2D"), ("ControlStroke", "#404040"), ("ControlStrokeStrong", "#9E9E9E"),
         ("ScrollThumb", "#7A7A7A"),
-        ("Critical", "#FF99A4"), ("Caution", "#FCE100"), ("Success", "#6CCB5F"), ("Neutral", "#8F8F8F"),
+        ("Critical", "#FF99A4"), ("Caution", "#FCE100"), ("CautionFill", "#FCE100"), ("Success", "#6CCB5F"), ("Neutral", "#8F8F8F"),
     };
 
     public static void Initialize()
