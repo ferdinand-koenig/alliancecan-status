@@ -262,3 +262,39 @@ public class ScheduleTests
         Assert.Equal(IncidentState.Upcoming, IncidentRules.Classify(inc, Now));
     }
 }
+
+public class RelativeTimeTests
+{
+    // Built from local times, so the tests don't depend on the machine's time zone.
+    static DateTimeOffset Local(int day, int hour, int minute = 0) =>
+        new(new DateTime(2026, 11, day, hour, minute, 0, DateTimeKind.Local));
+
+    static readonly DateTimeOffset SundayAfternoon = Local(22, 17);
+
+    [Fact]
+    public void CountsCalendarDays() =>
+        Assert.Equal("in 2 days", Fmt.Relative(Local(24, 8), SundayAfternoon)); // Sunday 17:00 → Tuesday 08:00
+
+    [Fact]
+    public void SaysTomorrowAndYesterday()
+    {
+        Assert.StartsWith("tomorrow, ", Fmt.Relative(Local(23, 8), SundayAfternoon));
+        Assert.StartsWith("yesterday, ", Fmt.Relative(Local(21, 23), SundayAfternoon));
+    }
+
+    [Fact]
+    public void UsesHoursAndMinutesToday()
+    {
+        Assert.Equal("in 3 h", Fmt.Relative(Local(22, 20), SundayAfternoon));
+        Assert.Equal("20 min ago", Fmt.Relative(Local(22, 16, 40), SundayAfternoon));
+        Assert.Equal("just now", Fmt.Relative(SundayAfternoon, SundayAfternoon));
+    }
+
+    [Fact]
+    public void CountsPastDays() =>
+        Assert.Equal("2 days ago", Fmt.Relative(Local(20, 10), SundayAfternoon));
+
+    [Fact]
+    public void MarksApproximateEnd() =>
+        Assert.Contains("– ≈", Fmt.Range(Local(24, 7, 30), Local(24, 13, 39), approximateEnd: true));
+}

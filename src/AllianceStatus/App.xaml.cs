@@ -110,7 +110,7 @@ public partial class App : Application
             TrayStatus.Upcoming => Fmt.Plural(view.Upcoming.Count, "upcoming event"),
             TrayStatus.Offline when view.LastSuccess is null => view.Refreshing ? "Checking…" : "Status unavailable",
             TrayStatus.Offline => "Some feeds unreachable",
-            _ => "All systems operational",
+            _ => "No active incidents",
         };
         _tray.SetStatus(view.Overall, $"Alliance Status\n{line}");
     }

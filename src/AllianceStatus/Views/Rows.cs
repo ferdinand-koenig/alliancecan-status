@@ -39,7 +39,10 @@ public sealed class IncidentRow
             Cluster = i.Cluster,
             Title = i.Title,
             Summary = summary,
-            Schedule = Fmt.Range(i.Start, i.End),
+            // Removed from the feed without an end time: the end is when we noticed, to within a check interval.
+            Schedule = state == IncidentState.Past && i.End is null && i.GoneSince is { } gone
+                ? Fmt.Range(i.Start, gone, approximateEnd: true)
+                : Fmt.Range(i.Start, i.End),
             Url = IncidentRules.LinkFor(i),
             When = state switch
             {

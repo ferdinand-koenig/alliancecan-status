@@ -168,9 +168,9 @@ public partial class FlyoutWindow : Window
             clusters == 0 ? "No clusters selected" :
             view.Active.Count > 0 ? Fmt.Plural(view.Active.Count, "active incident") +
                                     (view.Upcoming.Count > 0 ? $", {view.Upcoming.Count} upcoming" : "") :
-            view.Upcoming.Count > 0 ? $"Operational, {Fmt.Plural(view.Upcoming.Count, "upcoming event")}" :
+            view.Upcoming.Count > 0 ? $"No active incidents, {view.Upcoming.Count} upcoming" :
             view.LastSuccess is null ? (view.Refreshing ? "Checking status…" : "Status unavailable") :
-            "All systems operational";
+            "No active incidents";
 
         StatusDot.Fill = ThemeManager.Brush(view.Overall switch
         {

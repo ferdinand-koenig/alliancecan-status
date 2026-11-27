@@ -25,6 +25,10 @@ public sealed class NotificationRecord
     public string Fingerprint { get; set; } = "";
     public IncidentState State { get; set; }
     public DateTimeOffset LastSeen { get; set; }
+    /// <summary>Start|end as last notified, to say what changed in an "Updated" toast. Null in records from before 0.2.1.</summary>
+    public string? Schedule { get; set; }
+    /// <summary>Hash of the description as last notified. Null in records from before 0.2.1.</summary>
+    public string? SummaryHash { get; set; }
 }
 
 /// <summary>Everything persisted to %LOCALAPPDATA%\AllianceStatus\state.json.</summary>
@@ -40,6 +44,12 @@ public sealed class AppState
     /// <summary>True once the cluster list was made by a version that drops entries without a feed.</summary>
     public bool DiscoveryChecksFeeds { get; set; }
     public DateTimeOffset? LastCheck { get; set; }
+
+    /// <summary>
+    /// Per feed: the incidents that were active at the last successful check. When this goes from
+    /// some to none, the cluster is announced as resolved.
+    /// </summary>
+    public Dictionary<string, List<string>> ActiveByFeed { get; set; } = new();
 
     /// <summary>Version of the classification rules the stored notification records were made with.</summary>
     public int RulesVersion { get; set; }
@@ -66,6 +76,7 @@ public sealed class AppState
         Notified ??= new();
         Feeds ??= new();
         DiscoveredClusters ??= new();
+        ActiveByFeed ??= new();
         Subscriptions.RemoveAll(s => s is null || string.IsNullOrWhiteSpace(s.Url));
         foreach (var s in Subscriptions)
             if (string.IsNullOrWhiteSpace(s.Name)) s.Name = s.Url;

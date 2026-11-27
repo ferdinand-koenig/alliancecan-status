@@ -10,7 +10,11 @@ namespace AllianceStatus.Services;
 
 public enum ToastKind { New, Upcoming, Updated, Resolved }
 
-public sealed record PendingToast(Incident Incident, ToastKind Kind);
+/// <summary>
+/// A toast to show. For <see cref="ToastKind.Resolved"/> it announces a whole cluster (feed) whose
+/// last active incident ended; <paramref name="Incident"/> is then one of the incidents that ended.
+/// </summary>
+public sealed record PendingToast(Incident Incident, ToastKind Kind, string? Detail = null);
 
 /// <summary>Native Windows toasts. Clicking one opens the incident (argument "url").</summary>
 public static class Notifier
@@ -39,17 +43,32 @@ public static class Notifier
     static void ShowOne(PendingToast t)
     {
         var i = t.Incident;
+        if (t.Kind == ToastKind.Resolved)
+        {
+            // Says what the feed reports, not that the cluster works: the app doesn't test availability.
+            var resolved = new ToastContentBuilder()
+                .AddArgument("action", "open")
+                .AddText($"Resolved: {i.Cluster}")
+                .AddText($"No active incidents reported for {i.Cluster}.");
+            if (!string.IsNullOrWhiteSpace(t.Detail)) resolved.AddText(t.Detail);
+            resolved.Show(toast =>
+            {
+                toast.Tag = Tag("resolved|" + i.FeedUrl);
+                toast.Group = "resolved";
+            });
+            return;
+        }
+
         var heading = t.Kind switch
         {
             ToastKind.New => IncidentRules.IsMaintenance(i) ? "Maintenance" : "New incident",
             ToastKind.Upcoming => "Scheduled",
             ToastKind.Updated => "Updated",
-            ToastKind.Resolved => "Resolved",
             _ => "Status",
         };
-        var detail = i.Start is not null || i.End is not null
+        var detail = t.Detail ?? (i.Start is not null || i.End is not null
             ? Fmt.Range(i.Start, i.End)
-            : Fmt.Truncate(i.Summary.Replace('\n', ' '), 140);
+            : Fmt.Truncate(i.Summary.Replace('\n', ' '), 140));
 
         var builder = new ToastContentBuilder()
             .AddArgument("url", IncidentRules.LinkFor(i))
