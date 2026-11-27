@@ -5,6 +5,10 @@ name: Build installer
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version for this test build (no release is created)'
+        default: '0.0.0'
   push:
     tags: ['v*']
 
@@ -28,7 +32,7 @@ jobs:
           if ('${{ github.ref_type }}' -eq 'tag' -and $ref -match '^v?(\d+\.\d+\.\d+)') {
             $version = $Matches[1]
           } else {
-            $version = '0.0.0'
+            $version = '${{ inputs.version || '0.0.0' }}'
           }
           "APP_VERSION=$version" >> $env:GITHUB_ENV
           Write-Host "Building version $version"
@@ -57,7 +61,7 @@ jobs:
             dist/AllianceStatus-win-x64-standalone.zip
 
       - name: Create Release
-        if: github.ref_type == 'tag'
+        if: github.event_name == 'push' && github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
           files: |
